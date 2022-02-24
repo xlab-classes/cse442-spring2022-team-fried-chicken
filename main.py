@@ -26,20 +26,19 @@ async def JOHNCENA(ctx):
 
 @bot.command()
 async def assign_roles(ctx):
-    players = []
-    for member in ctx.guild.members:
-        if not member.bot:
+    players = []  # list of players
+    for member in ctx.guild.members:  # gets all members in the server
+        if not member.bot:  # that aren't bots
             players.append(member)
-    hitler = random.sample(players, 1)[0]
-    fascist = random.sample(players, 1)[0]
-    hitler_dm = await hitler.create_dm()
-    await hitler_dm.send("You are hitler!")
-    fascist_dm = await fascist.create_dm()
-    await fascist_dm.send("You are fascist!")
-    for liberal in players:
-        liberal_dm = await liberal.create_dm()
-        await liberal_dm.send("You are liberal!")
+    palpatine = players.pop(random.randrange(len(players)))  # removes one person from list to make palpatine
+    separatist = players.pop(random.randrange(len(players)))  # removes one person from the list to make a separatist - need to change later so 30% of players are seperatists
+    palpatine_dm = await palpatine.create_dm()  # creates dm channel for palpatine
+    await palpatine_dm.send("You are palpatine!")  # sends palpatine the message
+    separatist_dm = await separatist.create_dm()  # creates dm channel for seperatists
+    await separatist_dm.send("You are a seperatist!")  # sends separatist the message
+    for loyalist in players:  # remainder of players are loyalists
+        loyalist_dm = await loyalist.create_dm()  # creates loyalist dms
+        await loyalist_dm.send("You are a loyalist!")  # sends loyalists msgs
 
 
 bot.run(open("token.txt", "r").readline())  # Starts the bot
-
