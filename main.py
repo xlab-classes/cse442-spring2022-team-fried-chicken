@@ -7,6 +7,7 @@ intents.guilds = True
 intents.members = True
 bot = commands.Bot(command_prefix='%', help_command=None, intents=intents)  # Creates instance of bots
 
+policyCards = ['Fascist', 'Liberal']
 
 @bot.event
 async def on_ready():
@@ -23,6 +24,9 @@ async def hello(ctx, num: int):
 async def JOHNCENA(ctx):
     await ctx.send("YOU CAN'T SEE ME")
 
+@bot.command()
+async def pullCards(ctx):
+    await ctx.send(random.choices(policyCards, k = 3)) # send three random policy cards to server.
 
 @bot.command()
 async def assign_roles(ctx):
