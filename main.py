@@ -7,7 +7,7 @@ intents.guilds = True
 intents.members = True
 bot = commands.Bot(command_prefix='%', help_command=None, intents=intents)  # Creates instance of bots
 
-policyCards = ['Fascist', 'Liberal']
+policyCards = ['Separatist', 'Loyalist']
 
 @bot.event
 async def on_ready():
