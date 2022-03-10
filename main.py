@@ -7,6 +7,7 @@ intents.guilds = True
 intents.members = True
 bot = commands.Bot(command_prefix='%', help_command=None, intents=intents)  # Creates instance of bots
 
+game_started = False
 
 @bot.event
 async def on_ready():
@@ -23,22 +24,38 @@ async def hello(ctx, num: int):
 async def JOHNCENA(ctx):
     await ctx.send("YOU CAN'T SEE ME")
 
+@bot.command()
+async def start_game(ctx):
+    global game_started
+    game_started = True
+    await ctx.send("Game initialized!")
 
 @bot.command()
+async def end_game(ctx):
+    global game_started
+    game_started = False
+    await ctx.send("Game terminated!")
+
+
+@bot.command()
+@commands.has_permissions(administrator=True)
 async def assign_roles(ctx):
-    players = []  # list of players
-    for member in ctx.guild.members:  # gets all members in the server
-        if not member.bot:  # that aren't bots
-            players.append(member)
-    palpatine = players.pop(random.randrange(len(players)))  # removes one person from list to make palpatine
-    separatist = players.pop(random.randrange(len(players)))  # removes one person from the list to make a separatist - need to change later so 30% of players are seperatists
-    palpatine_dm = await palpatine.create_dm()  # creates dm channel for palpatine
-    await palpatine_dm.send("You are palpatine!")  # sends palpatine the message
-    separatist_dm = await separatist.create_dm()  # creates dm channel for seperatists
-    await separatist_dm.send("You are a seperatist!")  # sends separatist the message
-    for loyalist in players:  # remainder of players are loyalists
-        loyalist_dm = await loyalist.create_dm()  # creates loyalist dms
-        await loyalist_dm.send("You are a loyalist!")  # sends loyalists msgs
+    if game_started:
+        players = []  # list of players
+        for member in ctx.guild.members:  # gets all members in the server
+            if not member.bot:  # that aren't bots
+                players.append(member)
+        palpatine = players.pop(random.randrange(len(players)))  # removes one person from list to make palpatine
+        separatist = players.pop(random.randrange(len(players)))  # removes one person from the list to make a separatist - need to change later so 30% of players are seperatists
+        palpatine_dm = await palpatine.create_dm()  # creates dm channel for palpatine
+        await palpatine_dm.send("You are palpatine!")  # sends palpatine the message
+        separatist_dm = await separatist.create_dm()  # creates dm channel for seperatists
+        await separatist_dm.send("You are a seperatist!")  # sends separatist the message
+        for loyalist in players:  # remainder of players are loyalists
+            loyalist_dm = await loyalist.create_dm()  # creates loyalist dms
+            await loyalist_dm.send("You are a loyalist!")  # sends loyalists msgs
+    else:
+        await ctx.send("Start the game first with **%start_game**")
 
 
 bot.run(open("token.txt", "r").readline())  # Starts the bot
