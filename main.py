@@ -57,5 +57,15 @@ async def assign_roles(ctx):
     else:
         await ctx.send("Start the game first with **%start_game**")
 
+# @commands.has_role("President"): used when creating commands for only a specific role to use
+# ctx.message.author: use to get the member variable for the message's original author
+
+@bot.command()
+async def assign(ctx, member: discord.Member, role: discord.Role):
+    await member.add_roles(role)
+
+@bot.command()
+async def remove(ctx, member: discord.Member, role: discord.Role):
+    await member.remove_roles(role)
 
 bot.run(open("token.txt", "r").readline())  # Starts the bot
