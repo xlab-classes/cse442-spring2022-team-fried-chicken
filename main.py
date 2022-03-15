@@ -37,15 +37,18 @@ async def end_game(ctx):
 
 @bot.command()
 async def pullCards(ctx):
-    await ctx.send(random.choices(policyCards, k = 3)) # send three random policy cards to server.
+    await ctx.send(random.choices(policyCards, k = 3)) # Send three random policy cards to server.
 
 @bot.command()
-async def sendHand(ctx, role: discord.Role, *, msg):
+async def sendHand(ctx, role: discord.Role):
     global members
-    members = [m for m in ctx.guild.members if role in m.roles]
+    msg = random.choices(policyCards, k = 3) # Send three random policy cards to server.
+
+    members = [m for m in ctx.guild.members if role in m.roles] # Verify the inputted role exists within the servers roles.
     for m in members:
         try:
-            await m.send(msg)
+            await m.send(msg) # Send msg to all discord users within the server that have the inputted roles.
+            await m.send('Choose a single card to remove from the list. Use the %removeCard <card #> command.')
             print(f":white_check_mark: Message sent to {m}")
         except:
             print(f":x: No DM could be sent to {m}")
