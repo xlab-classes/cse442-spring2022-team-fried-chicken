@@ -28,15 +28,28 @@ async def start_game(ctx):
     global game_started
     game_started = True
     await ctx.send("Game initialized!")
-  
-async def pullCards(ctx):
-    await ctx.send(random.choices(policyCards, k = 3)) # send three random policy cards to server.
 
 @bot.command()
 async def end_game(ctx):
     global game_started
     game_started = False
     await ctx.send("Game terminated!")
+
+@bot.command()
+async def pullCards(ctx):
+    await ctx.send(random.choices(policyCards, k = 3)) # send three random policy cards to server.
+
+@bot.command()
+async def sendHand(ctx, role: discord.Role, *, msg):
+    global members
+    members = [m for m in ctx.guild.members if role in m.roles]
+    for m in members:
+        try:
+            await m.send(msg)
+            print(f":white_check_mark: Message sent to {m}")
+        except:
+            print(f":x: No DM could be sent to {m}")
+    print("Done!")
 
 @bot.command()
 @commands.has_permissions(administrator=True)
