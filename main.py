@@ -8,17 +8,16 @@ intents.members = True
 bot = commands.Bot(command_prefix='%', help_command=None, intents=intents)  # Creates instance of bots
 
 game_started = False
+policyCards = ['Fascist', 'Liberal']
 
 @bot.event
 async def on_ready():
     print(f'{bot.user.name} has connected to Discord!')
     await bot.change_presence(activity=discord.Game(name="stonks"))
 
-
 @bot.command()
 async def hello(ctx, num: int):
     await ctx.send("hello {}".format(num + 1))
-
 
 @bot.command()
 async def JOHNCENA(ctx):
@@ -29,13 +28,15 @@ async def start_game(ctx):
     global game_started
     game_started = True
     await ctx.send("Game initialized!")
+  
+async def pullCards(ctx):
+    await ctx.send(random.choices(policyCards, k = 3)) # send three random policy cards to server.
 
 @bot.command()
 async def end_game(ctx):
     global game_started
     game_started = False
     await ctx.send("Game terminated!")
-
 
 @bot.command()
 @commands.has_permissions(administrator=True)
@@ -56,6 +57,5 @@ async def assign_roles(ctx):
             await loyalist_dm.send("You are a loyalist!")  # sends loyalists msgs
     else:
         await ctx.send("Start the game first with **%start_game**")
-
 
 bot.run(open("token.txt", "r").readline())  # Starts the bot
