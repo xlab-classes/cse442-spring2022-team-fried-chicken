@@ -68,4 +68,26 @@ async def assign(ctx, member: discord.Member, role: discord.Role):
 async def remove(ctx, member: discord.Member, role: discord.Role):
     await member.remove_roles(role)
 
+@bot.command()
+@commands.has_role("Voter")
+async def ja(ctx):
+    voter = discord.utils.get(ctx.guild.roles, name="Voter")
+
+    # let the author know they voted
+    await ctx.message.author.send("you voted ja!")
+
+    # remove voter role to ensure user can only vote once
+    await ctx.message.author.remove_roles(voter)
+
+@bot.command()
+@commands.has_role("Voter")
+async def nein(ctx):
+    voter = discord.utils.get(ctx.guild.roles, name="Voter")
+
+    # let the author know they voted
+    await ctx.message.author.send("you voted nein!")
+
+    # remove voter role to ensure user can only vote once
+    await ctx.message.author.remove_roles(voter)
+
 bot.run(open("token.txt", "r").readline())  # Starts the bot
