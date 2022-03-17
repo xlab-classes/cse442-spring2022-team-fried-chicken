@@ -10,6 +10,7 @@ bot = commands.Bot(command_prefix='%', help_command=None, intents=intents)  # Cr
 
 game_started = False
 policyCards = ['Fascist', 'Liberal']
+gameHand = random.choices(policyCards, k = 3) # Send three random policy cards to server.
 
 @bot.event
 async def on_ready():
@@ -41,46 +42,58 @@ async def pullCards(ctx):
     await ctx.send(random.choices(policyCards, k = 3)) # Send three random policy cards to server.
 
 @bot.command()
-async def removeCard(ctx, role: discord.Role):
-    msg = "test"
+async def choseCard(ctx, role: discord.Role):
+    global members
     members = [m for m in ctx.guild.members if role in m.roles] # Verify the inputted role exists within the servers roles.
     for m in members:
         try:
-            await m.send(msg) # Send msg to all discord users within the server that have the inputted roles.
-            await m.send('Choose a single card to remove from the list. Use the %removeCard <card #> command.')
+            await m.send(gameHand) # Send msg to all discord users within the server that have the inputted roles.
+            await m.send("You're the Chancellor, chose which policy you would like to enact. 0 or 1.")
+            message_response = await bot.wait_for('message', check=lambda m: m.author == ctx.author)
+            cardToRemove = message_response.content
+
+            if(cardToRemove == "0"):
+                gameHand.pop(0)
+            if(cardToRemove == "1"):
+                gameHand.pop(1)
+
+            print(gameHand)
+
             print(f":white_check_mark: Message sent to {m}")
         except:
             print(f":x: No DM could be sent to {m}")
     print("Done!")
+    newPolicy = gameHand[0]
+    await ctx.send("The Chancellor has chosen to enact a new " + newPolicy + " policy!")
+
 
 @bot.command()
 async def sendHand(ctx, role: discord.Role):
     global members
-    msg = random.choices(policyCards, k = 3) # Send three random policy cards to server.
+
+    gameHand = random.choices(policyCards, k = 3) # Send three random policy cards to server.
 
     members = [m for m in ctx.guild.members if role in m.roles] # Verify the inputted role exists within the servers roles.
     for m in members:
         try:
-            await m.send(msg) # Send msg to all discord users within the server that have the inputted roles.
+            await m.send(gameHand) # Send msg to all discord users within the server that have the inputted roles.
             await m.send('Choose a single card to remove from the list. Type 0, 1, or 2. This card will be removed.')
             message_response = await bot.wait_for('message', check=lambda m: m.author == ctx.author)
             cardToRemove = message_response.content
 
-            print(cardToRemove)
-
             if(cardToRemove == "0"):
-                msg.pop(0)
+                gameHand.pop(0)
             if(cardToRemove == "1"):
-                msg.pop(1)
+                gameHand.pop(1)
             if(cardToRemove == "2"):
-                msg.pop(2)
-
-            print(msg)
+                gameHand.pop(2)
 
             print(f":white_check_mark: Message sent to {m}")
         except:
             print(f":x: No DM could be sent to {m}")
     print("Done!")
+    await ctx.send("President has removed card. Chancellor should now run the <%choseCard Chancellor> command.")
+
 
 
 @bot.command()
