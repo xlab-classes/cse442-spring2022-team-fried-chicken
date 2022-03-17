@@ -10,7 +10,6 @@ bot = commands.Bot(command_prefix='%', help_command=None, intents=intents)  # Cr
 
 game_started = False
 policyCards = ['Fascist', 'Liberal']
-gameHand = random.choices(policyCards, k = 3) # Send three random policy cards to server.
 
 @bot.event
 async def on_ready():
@@ -38,12 +37,9 @@ async def end_game(ctx):
     await ctx.send("Game terminated!")
 
 @bot.command()
-async def pullCards(ctx):
-    await ctx.send(random.choices(policyCards, k = 3)) # Send three random policy cards to server.
-
-@bot.command()
 async def choseCard(ctx, role: discord.Role):
     global members
+    global gameHand
     members = [m for m in ctx.guild.members if role in m.roles] # Verify the inputted role exists within the servers roles.
     for m in members:
         try:
@@ -71,6 +67,8 @@ async def choseCard(ctx, role: discord.Role):
 async def sendHand(ctx, role: discord.Role):
     global members
 
+    global gameHand
+    
     gameHand = random.choices(policyCards, k = 3) # Send three random policy cards to server.
 
     members = [m for m in ctx.guild.members if role in m.roles] # Verify the inputted role exists within the servers roles.
@@ -92,6 +90,7 @@ async def sendHand(ctx, role: discord.Role):
         except:
             print(f":x: No DM could be sent to {m}")
     print("Done!")
+    print(gameHand)
     await ctx.send("President has removed card. Chancellor should now run the <%choseCard Chancellor> command.")
 
 
