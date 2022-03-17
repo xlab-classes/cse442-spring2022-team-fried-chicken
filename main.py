@@ -1,3 +1,4 @@
+from email import message
 import discord
 from discord.ext import commands
 import random
@@ -40,10 +41,8 @@ async def pullCards(ctx):
     await ctx.send(random.choices(policyCards, k = 3)) # Send three random policy cards to server.
 
 @bot.command()
-async def sendHand(ctx, role: discord.Role):
-    global members
-    msg = random.choices(policyCards, k = 3) # Send three random policy cards to server.
-
+async def removeCard(ctx, role: discord.Role):
+    msg = "test"
     members = [m for m in ctx.guild.members if role in m.roles] # Verify the inputted role exists within the servers roles.
     for m in members:
         try:
@@ -53,6 +52,36 @@ async def sendHand(ctx, role: discord.Role):
         except:
             print(f":x: No DM could be sent to {m}")
     print("Done!")
+
+@bot.command()
+async def sendHand(ctx, role: discord.Role):
+    global members
+    msg = random.choices(policyCards, k = 3) # Send three random policy cards to server.
+
+    members = [m for m in ctx.guild.members if role in m.roles] # Verify the inputted role exists within the servers roles.
+    for m in members:
+        try:
+            await m.send(msg) # Send msg to all discord users within the server that have the inputted roles.
+            await m.send('Choose a single card to remove from the list. Type 0, 1, or 2. This card will be removed.')
+            message_response = await bot.wait_for('message', check=lambda m: m.author == ctx.author)
+            cardToRemove = message_response.content
+
+            print(cardToRemove)
+
+            if(cardToRemove == "0"):
+                msg.pop(0)
+            if(cardToRemove == "1"):
+                msg.pop(1)
+            if(cardToRemove == "2"):
+                msg.pop(2)
+
+            print(msg)
+
+            print(f":white_check_mark: Message sent to {m}")
+        except:
+            print(f":x: No DM could be sent to {m}")
+    print("Done!")
+
 
 @bot.command()
 @commands.has_permissions(administrator=True)
