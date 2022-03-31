@@ -7,6 +7,7 @@ intents = discord.Intents.default()  # Intents required to be declared for certa
 intents.guilds = True
 intents.members = True
 bot = commands.Bot(command_prefix='%', help_command=None, intents=intents)  # Creates instance of bots
+round_counter = 0
 
 game_started = False
 policyCards = ['Fascist', 'Liberal'] # Array to hold the randomly chosen policy cards each round.
@@ -145,5 +146,11 @@ async def nein(ctx):
 
     # remove voter role to ensure user can only vote once
     await ctx.message.author.remove_roles(voter)
+    
+@bot.command()
+async def next_round(ctx):
+    global round_counter
+    round_counter += 1
+    await ctx.send("Now initiating round {}!".format(round_counter))
 
 bot.run(open("token.txt", "r").readline())  # Starts the bot
