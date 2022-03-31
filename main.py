@@ -1,4 +1,5 @@
 from email import message
+from operator import truediv
 import discord
 from discord.ext import commands
 import random
@@ -9,6 +10,8 @@ intents.members = True
 bot = commands.Bot(command_prefix='%', help_command=None, intents=intents)  # Creates instance of bots
 
 game_started = False
+roles_assigned = False
+players = []
 policyCards = ['Fascist', 'Liberal'] # Array to hold the randomly chosen policy cards each round.
 
 @bot.event
@@ -32,9 +35,25 @@ async def start_game(ctx):
 
 @bot.command()
 async def end_game(ctx):
-    global game_started
+    global game_started, roles_assigned, players
     game_started = False
+    roles_assigned = False
+    players = []
     await ctx.send("Game terminated!")
+
+@bot.command()
+async def join_game(ctx):
+    if not game_started:  # Game needs to be started first
+        await ctx.send("Start the game first with **%start_game**")
+    elif roles_assigned:  # Roles should not yet be assigned
+        await ctx.send("Too late to join the game!")
+    elif len(players) >= 10:  # The lobby can not have more than 10 players
+        await ctx.send("Lobby is full")
+    elif ctx.author in players:  # A player can not join twice
+        await ctx.send("You have already joined the lobby!")
+    else:
+        players.append(ctx.author)
+        await ctx.send('{0} has joined the lobby!'.format(ctx.author))
 
 @bot.command()
 async def choseCard(ctx, role: discord.Role):
@@ -97,10 +116,8 @@ async def sendHand(ctx, role: discord.Role):
 @commands.has_permissions(administrator=True)
 async def assign_roles(ctx):
     if game_started:
-        players = []  # list of players
-        for member in ctx.guild.members:  # gets all members in the server
-            if not member.bot:  # that aren't bots
-                players.append(member)
+        global players, roles_assigned
+        copy = players.copy()
         palpatine = players.pop(random.randrange(len(players)))  # removes one person from list to make palpatine
         separatist = players.pop(random.randrange(len(players)))  # removes one person from the list to make a separatist - need to change later so 30% of players are seperatists
         palpatine_dm = await palpatine.create_dm()  # creates dm channel for palpatine
@@ -110,6 +127,8 @@ async def assign_roles(ctx):
         for loyalist in players:  # remainder of players are loyalists
             loyalist_dm = await loyalist.create_dm()  # creates loyalist dms
             await loyalist_dm.send("You are a loyalist!")  # sends loyalists msgs
+        roles_assigned = True
+        players = copy
     else:
         await ctx.send("Start the game first with **%start_game**")
 
