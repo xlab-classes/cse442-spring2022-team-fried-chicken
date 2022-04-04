@@ -154,7 +154,7 @@ async def elect(ctx, member: discord.Member):
     president = discord.utils.get(ctx.guild.roles, name="President")
     voter = discord.utils.get(ctx.guild.roles, name="Voter")
     
-    await member.add_roles(chancellor)
+    
 
     # Do one quick loop to check that a chancellor has not been elected yet
     for user in ctx.guild.members:
@@ -162,6 +162,8 @@ async def elect(ctx, member: discord.Member):
             if chancellor in user.roles:
                 await ctx.send("A Chancellor has already been elected")
                 return
+    
+    await member.add_roles(chancellor)
 
     # give the voter role to all the other players that are not the President or Chancellor
     for user in ctx.guild.members:
