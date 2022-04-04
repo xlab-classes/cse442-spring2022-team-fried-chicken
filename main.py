@@ -70,8 +70,11 @@ async def choseCard(ctx, role: discord.Role):
 
             if(cardToRemove == "0"):
                 gameHand.pop(0) # Remove first card in hand, second card will be the enacted policy.
-            if(cardToRemove == "1"):
+            elif(cardToRemove == "1"):
                 gameHand.pop(1) # Remove second card in hand, first card will be the enacted policy.
+            else:
+                await m.send('Invalid input! Run the <%choseCard Chancellor> command again.') # If the user entered an invalid character.
+                return
 
             print(gameHand) # Debugging statement to ensure task test passes.
 
@@ -98,11 +101,16 @@ async def sendHand(ctx, role: discord.Role):
             cardToRemove = message_response.content
 
             if(cardToRemove == "0"):
+                await m.send("test 0")
                 gameHand.pop(0) # Remove first card from the hand.
-            if(cardToRemove == "1"):
+            elif(cardToRemove == "1"):
+                await m.send("test 1")
                 gameHand.pop(1) # Remove second card from the hand.
-            if(cardToRemove == "2"):
-                gameHand.pop(2) # Remove third card from the hand.
+            elif(cardToRemove == "2"):
+                await gameHand.pop(2) # Remove third card from the hand.
+            else:
+                await m.send('Invalid input! Run the <%sendHand President> command again.') # If the user entered an invalid character.
+                return
 
             print(gameHand) # Debugging statement to ensure task test passes.
 
