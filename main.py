@@ -144,6 +144,32 @@ async def assign(ctx, member: discord.Member, role: discord.Role):
 async def remove(ctx, member: discord.Member, role: discord.Role):
     await member.remove_roles(role)
 
+# President can elect chancellor
+@bot.command()
+@commands.has_role("President")
+async def elect(ctx, member: discord.Member):
+
+    # variables for roles
+    chancellor = discord.utils.get(ctx.guild.roles, name="Chancellor")
+    president = discord.utils.get(ctx.guild.roles, name="President")
+    voter = discord.utils.get(ctx.guild.roles, name="Voter")
+    
+    await member.add_roles(chancellor)
+
+    # Do one quick loop to check that a chancellor has not been elected yet
+    for user in ctx.guild.members:
+        if not user.bot:
+            if chancellor in user.roles:
+                await ctx.send("A Chancellor has already been elected")
+                return
+
+    # give the voter role to all the other players that are not the President or Chancellor
+    for user in ctx.guild.members:
+        if not user.bot:
+            if president not in user.roles:
+                if chancellor not in user.roles:
+                    await user.add_roles(voter)
+
 @bot.command()
 @commands.has_role("Voter")
 async def ja(ctx):
