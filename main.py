@@ -3,12 +3,21 @@ from operator import truediv
 import discord
 from discord.ext import commands
 import random
+from config import *
+import firebase_admin
+from firebase_admin import credentials
+from firebase_admin import db
 
 intents = discord.Intents.default()  # Intents required to be declared for certain server perms
 intents.guilds = True
 intents.members = True
 bot = commands.Bot(command_prefix='%', help_command=None, intents=intents)  # Creates instance of bots
 round_counter = 0
+cred = credentials.Certificate(firebase_config)
+databaseApp = firebase_admin.initialize_app(cred, {
+    "databaseURL" : DatabaseURL
+})
+
 
 game_started = False
 roles_assigned = False
@@ -55,6 +64,26 @@ async def join_game(ctx):
     else:
         players.append(ctx.author)
         await ctx.send('{0} has joined the lobby!'.format(ctx.author))
+
+@bot.command()
+async def update_score(ctx, s: int):
+    if type(s) == int:
+        user = ctx.message.author.name
+        ref = db.reference(f"/")
+        ref.update({
+            user: {
+                "Score": s
+            }
+        })
+    else:
+        await ctx.send('Try again but with an int')
+
+@bot.command()
+async def get_score(ctx):
+    user = ctx.message.author.name
+    ref = db.reference(f"/")
+    score = ref.get(user)
+    await ctx.send('{0}s score is {1}.'.format(user, score[0][user]["Score"]))
 
 @bot.command()
 async def choseCard(ctx, role: discord.Role):
@@ -200,4 +229,5 @@ async def next_round(ctx):
     round_counter += 1
     await ctx.send("Now initiating round {}!".format(round_counter))
 
-bot.run(open("token.txt", "r").readline())  # Starts the bot
+#bot.run(open("token.txt", "r").readline())  # Starts the bot
+bot.run(TOKEN)
