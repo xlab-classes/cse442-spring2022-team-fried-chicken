@@ -13,6 +13,7 @@ roles_assigned = False
 presidentHasChosen = False # Bool flag to ensure choseCard command is not run before the sendHand command.
 players = []
 policyCards = ['Fascist', 'Liberal']  # Array to hold the randomly chosen policy cards each round.
+enactedPolicies = []
 
 
 @bot.event
@@ -65,7 +66,7 @@ async def join_game(ctx):
 @bot.command()
 async def choseCard(ctx, role: discord.Role):
     global members, gameHand, presidentHasChosen    # members is a list that holds each user in the discord server.
-                                                    # gameHand holds the hand the president and chancellor have.
+    global enactedPolicies                          # gameHand holds the hand the president and chancellor have.
                                                     # presidentHasChosen is a bool flag which ensures the choseCard command isn't run before sendHand.
     if(presidentHasChosen):
         members = [m for m in ctx.guild.members if role in m.roles] # Verify the inputted role exists within the servers roles.
@@ -93,8 +94,11 @@ async def choseCard(ctx, role: discord.Role):
 
         newPolicy = gameHand[0] # Define the new policy to be enacted and display to all players.
         presidentHasChosen = False # Update presidentHasChosen flag.
+        enactedPolicies.append(newPolicy)
+        policyString = generatePolicyString(enactedPolicies)
         await m.send('You succesfully removed card #' + cardToRemove + ' from the hand!')
         await ctx.send("The Chancellor has chosen to enact a new " + newPolicy + " policy!")
+        await ctx.send(policyString)
     else:
         await ctx.send('The choseHand command cannot be run until after the sendHand command.')
 
@@ -261,6 +265,14 @@ async def start_vote(ctx):
         await ctx.send("B wins with {} votes, A had {} votes.".format(b, a))
     elif a == b:
         await ctx.send("There is a tie with both A and B receiving {} votes.".format(a))
+
+def generatePolicyString(array_policies):
+    liberalCount = str(array_policies.count('Liberal'))
+    fascistCount = str(array_policies.count('Fascist'))
+
+    policyString = 'Current Liberal policies: ' + liberalCount + ' | Current Fascist policies: ' + fascistCount
+
+    return policyString
 
 
 bot.run(open("token.txt", "r").readline())  # Starts the bot
