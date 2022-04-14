@@ -12,6 +12,8 @@ round_counter = 0
 
 game_started = False
 roles_assigned = False
+chancellor_elected = False
+round_ended = False
 players = []
 policyCards = ['Fascist', 'Liberal'] # Array to hold the randomly chosen policy cards each round.
 
@@ -39,6 +41,7 @@ async def end_game(ctx):
     global game_started, roles_assigned, players
     game_started = False
     roles_assigned = False
+    round_counter = 0
     players = []
     await ctx.send("Game terminated!")
 
@@ -58,7 +61,7 @@ async def join_game(ctx):
 
 @bot.command()
 async def choseCard(ctx, role: discord.Role):
-    global members, gameHand # gameHand is a global variable to hold the hand the president and chancellor have.
+    global members, gameHand, round_ended # gameHand is a global variable to hold the hand the president and chancellor have.
 
     members = [m for m in ctx.guild.members if role in m.roles] # Verify the inputted role exists within the servers roles.
     for m in members:
@@ -82,6 +85,7 @@ async def choseCard(ctx, role: discord.Role):
 
     newPolicy = gameHand[0] # Define the new policy to be enacted and display to all players.
     await ctx.send("The Chancellor has chosen to enact a new " + newPolicy + " policy!")
+    round_ended = False
 
 
 @bot.command()
@@ -157,7 +161,7 @@ async def elect(ctx, member: discord.Member):
     
 
     # Do one quick loop to check that a chancellor has not been elected yet
-    for user in ctx.guild.members:
+    for user in players:
         if not user.bot:
             if chancellor in user.roles:
                 await ctx.send("A Chancellor has already been elected")
@@ -166,7 +170,7 @@ async def elect(ctx, member: discord.Member):
     await member.add_roles(chancellor)
 
     # give the voter role to all the other players that are not the President or Chancellor
-    for user in ctx.guild.members:
+    for user in players:
         if not user.bot:
             if president not in user.roles:
                 if chancellor not in user.roles:
@@ -195,9 +199,42 @@ async def nein(ctx):
     await ctx.message.author.remove_roles(voter)
     
 @bot.command()
+@commands.has_role("President")
 async def next_round(ctx):
+    if not game_started:
+        await ctx.send("Start the game first with **%start_game**")
+        return
+    if not round_ended:
+        await ctx.send("Round has not ended yet")
+        return
+
     global round_counter
     round_counter += 1
     await ctx.send("Now initiating round {}!".format(round_counter))
 
+    # remove all players of president, chancellor, and voter role just in case
+    president = discord.utils.get(ctx.guild.roles, name="President")
+    chancellor = discord.utils.get(ctx.guild.roles, name="Chancellor")
+    voter = discord.utils.get(ctx.guild.roles, name="Voter")
+    for user in players:
+        if president in user.roles:
+            await user.remove_roles(president)
+        if chancellor in user.roles:
+            await user.remove_roles(chancellor)
+        if voter in user.roles:
+            await user.remove_roles(voter)
+
+    # go to next president
+    curr_idx = players.index(ctx.author)
+    max_idx = len(players) - 1
+    if curr_idx == max_idx:
+        curr_idx = 0
+    else:
+        curr_idx += 1
+    next_president = players[curr_idx]
+    await next_president.add_roles(president)
+
+    await ctx.send("President must now elect the chancellor using **%elect [@user]**")
+
+    
 bot.run(open("token.txt", "r").readline())  # Starts the bot
