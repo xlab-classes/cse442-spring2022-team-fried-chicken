@@ -13,7 +13,7 @@ roles_assigned = False
 presidentHasChosen = False # Bool flag to ensure choseCard command is not run before the sendHand command.
 players = []
 policyCards = ['Fascist', 'Liberal']  # Array to hold the randomly chosen policy cards each round.
-enactedPolicies = []
+enactedPolicies = [] # Array to track currently enacted policy cards.
 
 
 @bot.event
@@ -94,11 +94,11 @@ async def choseCard(ctx, role: discord.Role):
 
         newPolicy = gameHand[0] # Define the new policy to be enacted and display to all players.
         presidentHasChosen = False # Update presidentHasChosen flag.
-        enactedPolicies.append(newPolicy)
-        policyString = generatePolicyString(enactedPolicies)
+        enactedPolicies.append(newPolicy) # Push the newly enacted policy to the enactedPolicies array to keep track of policies.
+
         await m.send('You succesfully removed card #' + cardToRemove + ' from the hand!')
         await ctx.send("The Chancellor has chosen to enact a new " + newPolicy + " policy!")
-        await ctx.send(policyString)
+        await ctx.send(generatePolicyString(enactedPolicies))
     else:
         await ctx.send('The choseHand command cannot be run until after the sendHand command.')
 
@@ -266,11 +266,11 @@ async def start_vote(ctx):
     elif a == b:
         await ctx.send("There is a tie with both A and B receiving {} votes.".format(a))
 
-def generatePolicyString(array_policies):
+def generatePolicyString(array_policies):   # Compute the number of each policy and generate output string.
     liberalCount = str(array_policies.count('Liberal'))
     fascistCount = str(array_policies.count('Fascist'))
 
-    policyString = 'Current Liberal policies: ' + liberalCount + ' | Current Fascist policies: ' + fascistCount
+    policyString = 'Currently enacted Liberal policies: ' + liberalCount + '   |   Currently enacted Fascist policies: ' + fascistCount
 
     return policyString
 
