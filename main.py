@@ -4,6 +4,8 @@ from discord.ext import commands
 import random
 import asyncio
 
+from rsa import verify
+
 intents = discord.Intents.all()  # Intents required to be declared for certain server perms
 intents.guilds = True
 intents.members = True
@@ -48,7 +50,7 @@ async def end_game(ctx):
     roles_assigned = False
     chancellor_elected = False
     round_ended = False
-    round_counter =
+    round_counter = 0
     players = []
     await ctx.send("Game terminated!")
 
@@ -267,16 +269,33 @@ async def next_round(ctx):
 
 @bot.command()
 async def start_vote(ctx):
-    global chancellor_elected, round_ended
+    global chancellor_elected, round_ended, players
 
+    chancellor = discord.utils.find(lambda x: x.name == 'Chancellor', ctx.message.guild.roles)
+    president = discord.utils.find(lambda x: x.name == 'President', ctx.message.guild.roles)
+
+    if chancellor_elected:
+        ctx.send("The chancellor has already been elected")
+        return
+
+    verify = False
+    # check that a chancellor has been nominated
+    for user in players:
+        if chancellor in user.roles:
+            verify = True
+            break
+
+    if not verify:
+        ctx.send("A chancellor has not yet been nominated.\n Please call the **%elect [@user]** command first")
+        return
+    
     msg = await ctx.send("Vote A or B! You have 10 seconds! \n If you put more than 1 reaction, your left-most reaction will be taken.")
     await msg.add_reaction('\U0001F170')  # A emote
     await msg.add_reaction('\U0001F171')  # B emote
     await asyncio.sleep(10)
     a = 0
     b = 0
-    chancellor = discord.utils.find(lambda x: x.name == 'Chancellor', ctx.message.guild.roles)
-    president = discord.utils.find(lambda x: x.name == 'President', ctx.message.guild.roles)
+    
     react_msg = discord.utils.get(bot.cached_messages, id=msg.id)
     reacted = []
     for r in react_msg.reactions:
