@@ -72,7 +72,7 @@ async def join_game(ctx):
 
 @bot.command()
 async def choseCard(ctx, role: discord.Role):
-    global members, gameHand  # gameHand is a global variable to hold the hand the president and chancellor have.
+    global members, gameHand, round_ended  # gameHand is a global variable to hold the hand the president and chancellor have.
 
     members = [m for m in ctx.guild.members if
                role in m.roles]  # Verify the inputted role exists within the servers roles.
@@ -98,6 +98,7 @@ async def choseCard(ctx, role: discord.Role):
 
     newPolicy = gameHand[0]  # Define the new policy to be enacted and display to all players.
     await ctx.send("The Chancellor has chosen to enact a new " + newPolicy + " policy!")
+    round_ended = True
 
 
 @bot.command()
@@ -268,26 +269,20 @@ async def next_round(ctx):
     await ctx.send("President must now elect the chancellor using **%elect [@user]**")
 
 @bot.command()
-async def start_vote(ctx):
+async def start_vote(ctx, member: discord.Member):
     global chancellor_elected, round_ended, players
 
     chancellor = discord.utils.find(lambda x: x.name == 'Chancellor', ctx.message.guild.roles)
     president = discord.utils.find(lambda x: x.name == 'President', ctx.message.guild.roles)
 
-    if chancellor_elected:
-        ctx.send("The chancellor has already been elected")
-        return
-
-    verify = False
-    # check that a chancellor has been nominated
-    for user in players:
-        if chancellor in user.roles:
-            verify = True
-            break
-
-    if not verify:
-        ctx.send("A chancellor has not yet been nominated.\n Please call the **%elect [@user]** command first")
-        return
+    # Do one quick loop to check that a chancellor has not been elected yet
+    for user in ctx.guild.members:
+        if not user.bot:
+            if chancellor in user.roles:
+                await ctx.send("A Chancellor has already been elected")
+                return
+    
+    await member.add_roles(chancellor)
     
     msg = await ctx.send("Vote A or B! You have 10 seconds! \n If you put more than 1 reaction, your left-most reaction will be taken.")
     await msg.add_reaction('\U0001F170')  # A emote
