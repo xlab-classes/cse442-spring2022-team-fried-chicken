@@ -1,7 +1,10 @@
+from sys import flags
 import discord
 from discord.ext import commands
 import random
 import asyncio
+
+from rsa import verify
 
 intents = discord.Intents.all()  # Intents required to be declared for certain server perms
 intents.guilds = True
@@ -11,6 +14,9 @@ bot = commands.Bot(command_prefix='%', help_command=None, intents=intents)  # Cr
 game_started = False
 roles_assigned = False
 presidentHasChosen = False # Bool flag to ensure choseCard command is not run before the sendHand command.
+chancellor_elected = False
+round_ended = False
+round_counter = 0
 players = []
 policyCards = ['Fascist', 'Liberal']  # Array to hold the randomly chosen policy cards each round.
 
@@ -40,9 +46,12 @@ async def start_game(ctx):
 
 @bot.command()
 async def end_game(ctx):
-    global game_started, roles_assigned, players
+    global game_started, roles_assigned, chancellor_elected, round_ended, round_counter, players
     game_started = False
     roles_assigned = False
+    chancellor_elected = False
+    round_ended = False
+    round_counter = 0
     players = []
     await ctx.send("Game terminated!")
 
@@ -97,6 +106,33 @@ async def choseCard(ctx, role: discord.Role):
         await ctx.send("The Chancellor has chosen to enact a new " + newPolicy + " policy!")
     else:
         await ctx.send('The choseHand command cannot be run until after the sendHand command.')
+    global members, gameHand, round_ended  # gameHand is a global variable to hold the hand the president and chancellor have.
+
+    members = [m for m in ctx.guild.members if
+               role in m.roles]  # Verify the inputted role exists within the servers roles.
+    for m in members:
+        try:
+            await m.send(gameHand)  # Send msg to all discord users within the server that have the inputted roles.
+            await m.send("You're the Chancellor, chose which policy you would like to enact. 0 or 1.")
+            message_response = await bot.wait_for('message', check=lambda
+                m: m.author == ctx.author)  # Get card to remove from user.
+            cardToRemove = message_response.content
+
+            if (cardToRemove == "0"):
+                gameHand.pop(0)  # Remove first card in hand, second card will be the enacted policy.
+            if (cardToRemove == "1"):
+                gameHand.pop(1)  # Remove second card in hand, first card will be the enacted policy.
+
+            print(gameHand)  # Debugging statement to ensure task test passes.
+
+            print(f":white_check_mark: Message sent to {m}")
+        except:
+            print(f":x: No DM could be sent to {m}")
+    print("Done!")
+
+    newPolicy = gameHand[0]  # Define the new policy to be enacted and display to all players.
+    await ctx.send("The Chancellor has chosen to enact a new " + newPolicy + " policy!")
+    round_ended = True
 
 
 @bot.command()
@@ -106,6 +142,15 @@ async def sendHand(ctx, role: discord.Role):
                                                     # presidentHasChosen is a bool flag which ensures the choseCard command isn't run before sendHand.
     gameHand = random.choices(policyCards, k = 3) # Send three random policy cards to server.
     members = [m for m in ctx.guild.members if role in m.roles] # Verify the inputted role exists within the servers roles.
+
+    # This command can only be called after the chancellor has been elected
+    if not chancellor_elected:
+        await ctx.send("A chancellor was not yet elected")
+        return
+
+    gameHand = random.choices(policyCards, k=3)  # Send three random policy cards to server.
+    members = [m for m in ctx.guild.members if
+               role in m.roles]  # Verify the inputted role exists within the servers roles.
     for m in members:
         try:
             await m.send(gameHand)  # Send msg to all discord users within the server that have the inputted roles.
@@ -221,22 +266,71 @@ async def nein(ctx):
 
 
 @bot.command()
+@commands.has_role("President")
 async def next_round(ctx):
+    global round_ended, chancellor_elected
+
+    if not game_started:
+        await ctx.send("Start the game first with **%start_game**")
+        return
+    if not round_ended:
+        await ctx.send("Round has not ended yet")
+        return
+
     global round_counter
     round_counter += 1
     await ctx.send("Now initiating round {}!".format(round_counter))
 
+    # remove all players of president, chancellor, and voter role just in case
+    president = discord.utils.get(ctx.guild.roles, name="President")
+    chancellor = discord.utils.get(ctx.guild.roles, name="Chancellor")
+    voter = discord.utils.get(ctx.guild.roles, name="Voter")
+    for user in players:
+        if president in user.roles:
+            await user.remove_roles(president)
+        if chancellor in user.roles:
+            await user.remove_roles(chancellor)
+        if voter in user.roles:
+            await user.remove_roles(voter)
+    
+    # reset Flags
+    chancellor_elected = False
+    round_ended = False
+
+    # go to next president
+    curr_idx = players.index(ctx.author)
+    max_idx = len(players) - 1
+    if curr_idx == max_idx:
+        curr_idx = 0
+    else:
+        curr_idx += 1
+    next_president = players[curr_idx]
+
+    await ctx.send("President must now elect the chancellor using **%elect [@user]**")
 
 @bot.command()
-async def start_vote(ctx):
+async def start_vote(ctx, member: discord.Member):
+    global chancellor_elected, round_ended, players
+
+    chancellor = discord.utils.find(lambda x: x.name == 'Chancellor', ctx.message.guild.roles)
+    president = discord.utils.find(lambda x: x.name == 'President', ctx.message.guild.roles)
+
+    # Do one quick loop to check that a chancellor has not been elected yet
+    for user in ctx.guild.members:
+        if not user.bot:
+            if chancellor in user.roles:
+                await ctx.send("A Chancellor has already been elected")
+                return
+    
+    await member.add_roles(chancellor)
+    
     msg = await ctx.send("Vote A or B! You have 10 seconds! \n If you put more than 1 reaction, your left-most reaction will be taken.")
     await msg.add_reaction('\U0001F170')  # A emote
     await msg.add_reaction('\U0001F171')  # B emote
     await asyncio.sleep(10)
     a = 0
     b = 0
-    chancellor = discord.utils.find(lambda x: x.name == 'Chancellor', ctx.message.guild.roles)
-    president = discord.utils.find(lambda x: x.name == 'President', ctx.message.guild.roles)
+    
     react_msg = discord.utils.get(bot.cached_messages, id=msg.id)
     reacted = []
     for r in react_msg.reactions:
@@ -257,10 +351,13 @@ async def start_vote(ctx):
         b = 0
     if a > b:
         await ctx.send("A wins with {} votes, B had {} votes.".format(a, b))
+        chancellor_elected = True
     elif b > a:
         await ctx.send("B wins with {} votes, A had {} votes.".format(b, a))
+        round_ended = True
     elif a == b:
         await ctx.send("There is a tie with both A and B receiving {} votes.".format(a))
+        round_ended = True
 
 
 bot.run(open("token.txt", "r").readline())  # Starts the bot
