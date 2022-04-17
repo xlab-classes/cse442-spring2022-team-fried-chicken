@@ -13,6 +13,7 @@ bot = commands.Bot(command_prefix='%', help_command=None, intents=intents)  # Cr
 
 game_started = False
 roles_assigned = False
+presidentHasChosen = False # Bool flag to ensure choseCard command is not run before the sendHand command.
 chancellor_elected = False
 round_ended = False
 round_counter = 0
@@ -72,6 +73,39 @@ async def join_game(ctx):
 
 @bot.command()
 async def choseCard(ctx, role: discord.Role):
+    global members, gameHand, presidentHasChosen    # members is a list that holds each user in the discord server.
+                                                    # gameHand holds the hand the president and chancellor have.
+                                                    # presidentHasChosen is a bool flag which ensures the choseCard command isn't run before sendHand.
+    if(presidentHasChosen):
+        members = [m for m in ctx.guild.members if role in m.roles] # Verify the inputted role exists within the servers roles.
+        for m in members:
+            try:
+                await m.send(gameHand) # Send msg to all discord users within the server that have the inputted roles.
+                await m.send("You're the Chancellor, chose which policy you would like to enact. 0 or 1.")
+                message_response = await bot.wait_for('message', check=lambda m: m.author == ctx.author) # Get card to remove from user.
+                cardToRemove = message_response.content
+
+                if(cardToRemove == "0"):
+                    gameHand.pop(0) # Remove first card in hand, second card will be the enacted policy.
+                elif(cardToRemove == "1"):
+                    gameHand.pop(1) # Remove second card in hand, first card will be the enacted policy.
+                else: # If the user entered an invalid character.
+                    await m.send('Invalid input! Run the <%choseCard Chancellor> command again.')
+                    return
+
+                print(gameHand) # Debugging statement to ensure task test passes.
+
+                print(f":white_check_mark: Message sent to {m}")
+            except:
+                print(f":x: No DM could be sent to {m}")
+        print("Done!")
+
+        newPolicy = gameHand[0] # Define the new policy to be enacted and display to all players.
+        presidentHasChosen = False # Update presidentHasChosen flag.
+        await m.send('You succesfully removed card #' + cardToRemove + ' from the hand!')
+        await ctx.send("The Chancellor has chosen to enact a new " + newPolicy + " policy!")
+    else:
+        await ctx.send('The choseHand command cannot be run until after the sendHand command.')
     global members, gameHand, round_ended  # gameHand is a global variable to hold the hand the president and chancellor have.
 
     members = [m for m in ctx.guild.members if
@@ -103,7 +137,11 @@ async def choseCard(ctx, role: discord.Role):
 
 @bot.command()
 async def sendHand(ctx, role: discord.Role):
-    global members, gameHand  # gameHand is a global variable to hold the hand the president and chancellor have.
+    global members, gameHand, presidentHasChosen    # members is a list that holds each user in the discord server.
+                                                    # gameHand holds the hand the president and chancellor have.
+                                                    # presidentHasChosen is a bool flag which ensures the choseCard command isn't run before sendHand.
+    gameHand = random.choices(policyCards, k = 3) # Send three random policy cards to server.
+    members = [m for m in ctx.guild.members if role in m.roles] # Verify the inputted role exists within the servers roles.
 
     # This command can only be called after the chancellor has been elected
     if not chancellor_elected:
@@ -121,12 +159,15 @@ async def sendHand(ctx, role: discord.Role):
                 m: m.author == ctx.author)  # Get card to remove from user.
             cardToRemove = message_response.content
 
-            if cardToRemove == "0":
-                gameHand.pop(0)  # Remove first card from the hand.
-            if cardToRemove == "1":
-                gameHand.pop(1)  # Remove second card from the hand.
-            if cardToRemove == "2":
-                gameHand.pop(2)  # Remove third card from the hand.
+            if(cardToRemove == "0"):
+                gameHand.pop(0) # Remove first card from the hand.
+            elif(cardToRemove == "1"):
+                gameHand.pop(1) # Remove second card from the hand.
+            elif(cardToRemove == "2"):
+                await gameHand.pop(2) # Remove third card from the hand.
+            else: # If the user entered an invalid character.
+                await m.send('Invalid input! Run the <%sendHand President> command again.')
+                return
 
             print(gameHand)  # Debugging statement to ensure task test passes.
 
@@ -135,9 +176,9 @@ async def sendHand(ctx, role: discord.Role):
             print(f":x: No DM could be sent to {m}")
     print("Done!")
 
-    await ctx.send(
-        "President has removed card. Chancellor should now run the <%choseCard Chancellor> command.")  # Notify players the President has removed the first card.
-
+    presidentHasChosen = True # Update presidentHasChosen flag.
+    await m.send('You succesfully removed card #' + cardToRemove + ' from the hand!')
+    await ctx.send("President has removed card. Chancellor should now run the <%choseCard Chancellor> command.") # Notify players the President has removed the first card.
 
 @bot.command()
 @commands.has_permissions(administrator=True)
@@ -264,7 +305,6 @@ async def next_round(ctx):
     else:
         curr_idx += 1
     next_president = players[curr_idx]
-    await next_president.add_roles(president)
 
     await ctx.send("President must now elect the chancellor using **%elect [@user]**")
 
