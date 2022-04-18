@@ -73,7 +73,7 @@ async def join_game(ctx):
 
 @bot.command()
 async def choseCard(ctx, role: discord.Role):
-    global members, gameHand, presidentHasChosen    # members is a list that holds each user in the discord server.
+    global members, gameHand, presidentHasChosen, round_ended    # members is a list that holds each user in the discord server.
                                                     # gameHand holds the hand the president and chancellor have.
                                                     # presidentHasChosen is a bool flag which ensures the choseCard command isn't run before sendHand.
     if(presidentHasChosen):
@@ -106,7 +106,6 @@ async def choseCard(ctx, role: discord.Role):
         await ctx.send("The Chancellor has chosen to enact a new " + newPolicy + " policy!")
     else:
         await ctx.send('The choseHand command cannot be run until after the sendHand command.')
-    global members, gameHand, round_ended  # gameHand is a global variable to hold the hand the president and chancellor have.
 
     members = [m for m in ctx.guild.members if
                role in m.roles]  # Verify the inputted role exists within the servers roles.
