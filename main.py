@@ -229,5 +229,5 @@ async def next_round(ctx):
     round_counter += 1
     await ctx.send("Now initiating round {}!".format(round_counter))
 
-#bot.run(open("token.txt", "r").readline())  # Starts the bot
-bot.run(TOKEN)
+bot.run(open("token.txt", "r").readline())  # Starts the bot
+#bot.run(TOKEN)
