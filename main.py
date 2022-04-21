@@ -19,6 +19,7 @@ round_ended = False
 round_counter = 0
 players = []
 policyCards = ['Fascist', 'Liberal']  # Array to hold the randomly chosen policy cards each round.
+enactedPolicies = [] # Array to track currently enacted policy cards.
 
 
 @bot.event
@@ -75,6 +76,8 @@ async def join_game(ctx):
 async def choseCard(ctx, role: discord.Role):
     global members, gameHand, presidentHasChosen, round_ended    # members is a list that holds each user in the discord server.
                                                     # gameHand holds the hand the president and chancellor have.
+    global members, gameHand, presidentHasChosen    # members is a list that holds each user in the discord server.
+    global enactedPolicies                          # gameHand holds the hand the president and chancellor have.
                                                     # presidentHasChosen is a bool flag which ensures the choseCard command isn't run before sendHand.
     if(presidentHasChosen):
         members = [m for m in ctx.guild.members if role in m.roles] # Verify the inputted role exists within the servers roles.
@@ -102,36 +105,14 @@ async def choseCard(ctx, role: discord.Role):
 
         newPolicy = gameHand[0] # Define the new policy to be enacted and display to all players.
         presidentHasChosen = False # Update presidentHasChosen flag.
+        enactedPolicies.append(newPolicy) # Push the newly enacted policy to the enactedPolicies array to keep track of policies.
+
         await m.send('You succesfully removed card #' + cardToRemove + ' from the hand!')
         await ctx.send("The Chancellor has chosen to enact a new " + newPolicy + " policy!")
+        await ctx.send(generatePolicyString(enactedPolicies))
     else:
         await ctx.send('The choseHand command cannot be run until after the sendHand command.')
-
-    members = [m for m in ctx.guild.members if
-               role in m.roles]  # Verify the inputted role exists within the servers roles.
-    for m in members:
-        try:
-            await m.send(gameHand)  # Send msg to all discord users within the server that have the inputted roles.
-            await m.send("You're the Chancellor, chose which policy you would like to enact. 0 or 1.")
-            message_response = await bot.wait_for('message', check=lambda
-                m: m.author == ctx.author)  # Get card to remove from user.
-            cardToRemove = message_response.content
-
-            if (cardToRemove == "0"):
-                gameHand.pop(0)  # Remove first card in hand, second card will be the enacted policy.
-            if (cardToRemove == "1"):
-                gameHand.pop(1)  # Remove second card in hand, first card will be the enacted policy.
-
-            print(gameHand)  # Debugging statement to ensure task test passes.
-
-            print(f":white_check_mark: Message sent to {m}")
-        except:
-            print(f":x: No DM could be sent to {m}")
-    print("Done!")
-
-    newPolicy = gameHand[0]  # Define the new policy to be enacted and display to all players.
-    await ctx.send("The Chancellor has chosen to enact a new " + newPolicy + " policy!")
-    round_ended = True
+        round_ended = True
 
 
 @bot.command()
@@ -357,6 +338,14 @@ async def start_vote(ctx, member: discord.Member):
     elif a == b:
         await ctx.send("There is a tie with both A and B receiving {} votes.".format(a))
         round_ended = True
+
+def generatePolicyString(array_policies):   # Compute the number of each policy and generate output string.
+    liberalCount = str(array_policies.count('Liberal'))
+    fascistCount = str(array_policies.count('Fascist'))
+
+    policyString = 'Currently enacted Liberal policies: ' + liberalCount + '   |   Currently enacted Fascist policies: ' + fascistCount
+
+    return policyString
 
 
 bot.run(open("token.txt", "r").readline())  # Starts the bot
