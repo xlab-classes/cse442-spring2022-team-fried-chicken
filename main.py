@@ -161,10 +161,18 @@ async def choseCard(ctx, role: discord.Role):
         newPolicy = gameHand[0] # Define the new policy to be enacted and display to all players.
         presidentHasChosen = False # Update presidentHasChosen flag.
         enactedPolicies.append(newPolicy) # Push the newly enacted policy to the enactedPolicies array to keep track of policies.
+        verifyWin = checkPolicies(enactedPolicies) # Ensure no policy counts have reached 5.
 
         await m.send('You succesfully removed card #' + cardToRemove + ' from the hand!')
         await ctx.send("The Chancellor has chosen to enact a new " + newPolicy + " policy!")
         await ctx.send(generatePolicyString(enactedPolicies))
+
+        if(verifyWin == 1):
+            await ctx.send("The Liberals have succesfully enacted 5 policies! They are the winners!")
+            end_game(ctx)
+        elif(verifyWin == 2):
+            await ctx.send("The Fascists have succesfully enacted 5 policies! They are the winners!")
+            end_game(ctx)
     else:
         await ctx.send('The choseHand command cannot be run until after the sendHand command.')
         round_ended = True
@@ -401,6 +409,17 @@ def generatePolicyString(array_policies):   # Compute the number of each policy 
     policyString = 'Currently enacted Liberal policies: ' + liberalCount + '   |   Currently enacted Fascist policies: ' + fascistCount
 
     return policyString
+
+def checkPolicies(array_policies):
+    liberalCount = array_policies.count('Liberal')
+    fascistCount = array_policies.count('Fascist')
+
+    if(liberalCount == 5): # When the Liberal policies hit 5, they have won the game.
+        return 1
+    elif(fascistCount == 5): # When the Fascist policies hit 5, they have won the game.
+        return 2
+    else:
+        return -1
 
 
 bot.run(open("token.txt", "r").readline())  # Starts the bot
