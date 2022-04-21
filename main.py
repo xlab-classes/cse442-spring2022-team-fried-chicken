@@ -132,9 +132,9 @@ async def sendHand(ctx, role: discord.Role):
     members = [m for m in ctx.guild.members if role in m.roles] # Verify the inputted role exists within the servers roles.
 
     # This command can only be called after the chancellor has been elected
-    # if not chancellor_elected:
-    #     await ctx.send("A chancellor was not yet elected")
-    #     return
+    if not chancellor_elected:
+        await ctx.send("A chancellor was not yet elected")
+        return
 
     gameHand = random.choices(policyCards, k=3)  # Send three random policy cards to server.
     members = [m for m in ctx.guild.members if
