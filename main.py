@@ -3,6 +3,10 @@ import discord
 from discord.ext import commands
 import random
 import asyncio
+from config import *
+import firebase_admin
+from firebase_admin import credentials
+from firebase_admin import db
 
 from rsa import verify
 
@@ -10,6 +14,10 @@ intents = discord.Intents.all()  # Intents required to be declared for certain s
 intents.guilds = True
 intents.members = True
 bot = commands.Bot(command_prefix='%', help_command=None, intents=intents)  # Creates instance of bots
+cred = credentials.Certificate(firebase_config)
+databaseApp = firebase_admin.initialize_app(cred, {
+    "databaseURL": DatabaseURL
+})
 
 game_started = False
 roles_assigned = False
@@ -21,6 +29,18 @@ players = []
 policyCards = ['Fascist', 'Liberal']  # Array to hold the randomly chosen policy cards each round.
 enactedPolicies = [] # Array to track currently enacted policy cards.
 
+=======
+
+
+@bot.command(pass_context=True)
+async def write(ctx):
+    # color = input("Pick a color")
+    user = ctx.message.author
+    ref = db.reference(f"/")
+    ref.update({
+        "Color": "blue"
+    })
+>>>>>>> leaderboard(#34)
 
 @bot.event
 async def on_ready():
@@ -59,6 +79,16 @@ async def end_game(ctx):
 
 @bot.command()
 async def join_game(ctx):
+    user = ctx.message.author.name
+    ref = db.reference(f"/")
+    score = ref.get(user)
+    if user not in score[0]:
+        ref.update({
+            user: {
+                "Wins": 0,
+                "Games": 0
+            }
+        })
     if not game_started:  # Game needs to be started first
         await ctx.send("Start the game first with **%start_game**")
     elif roles_assigned:  # Roles should not yet be assigned
@@ -71,6 +101,34 @@ async def join_game(ctx):
         players.append(ctx.author)
         await ctx.send('{0} has joined the lobby!'.format(ctx.author))
 
+
+@bot.command()
+async def scoreboard(ctx):
+    user = ctx.message.author.name
+    ref = db.reference(f"/")
+    score = ref.get(user)
+    for use in score[0]:
+        await ctx.send('{0} has {1} wins out of {2} games.'.format(use, score[0][use]["Wins"], score[0][use]["Games"]))
+
+@bot.command()
+async def update_score(ctx, s: int):
+    if type(s) == int:
+        user = ctx.message.author.name
+        ref = db.reference(f"/")
+        ref.update({
+            user: {
+                "Score": s
+            }
+        })
+    else:
+        await ctx.send('Try again but with an int')
+
+@bot.command()
+async def get_score(ctx):
+    user = ctx.message.author.name
+    ref = db.reference(f"/")
+    score = ref.get(user)
+    await ctx.send('{0}s score is {1}.'.format(user, score[0][user]["Score"]))
 
 @bot.command()
 async def choseCard(ctx, role: discord.Role):
