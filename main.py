@@ -29,8 +29,6 @@ players = []
 policyCards = ['Fascist', 'Liberal']  # Array to hold the randomly chosen policy cards each round.
 enactedPolicies = [] # Array to track currently enacted policy cards.
 
-=======
-
 
 @bot.command(pass_context=True)
 async def write(ctx):
@@ -40,7 +38,6 @@ async def write(ctx):
     ref.update({
         "Color": "blue"
     })
->>>>>>> leaderboard(#34)
 
 @bot.event
 async def on_ready():
