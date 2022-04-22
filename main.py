@@ -158,6 +158,9 @@ async def choseCard(ctx, role: discord.Role):
                 print(f":x: No DM could be sent to {m}")
         print("Done!")
 
+        # round can end now
+        round_ended = True
+
         newPolicy = gameHand[0] # Define the new policy to be enacted and display to all players.
         presidentHasChosen = False # Update presidentHasChosen flag.
         enactedPolicies.append(newPolicy) # Push the newly enacted policy to the enactedPolicies array to keep track of policies.
@@ -175,12 +178,11 @@ async def choseCard(ctx, role: discord.Role):
             end_game(ctx)
     else:
         await ctx.send('The choseHand command cannot be run until after the sendHand command.')
-        round_ended = True
 
 
 @bot.command()
 async def sendHand(ctx, role: discord.Role):
-    global members, gameHand, presidentHasChosen    # members is a list that holds each user in the discord server.
+    global members, gameHand, presidentHasChosen, round_ended    # members is a list that holds each user in the discord server.
                                                     # gameHand holds the hand the president and chancellor have.
                                                     # presidentHasChosen is a bool flag which ensures the choseCard command isn't run before sendHand.
     gameHand = random.choices(policyCards, k = 3) # Send three random policy cards to server.
@@ -189,6 +191,10 @@ async def sendHand(ctx, role: discord.Role):
     # This command can only be called after the chancellor has been elected
     if not chancellor_elected:
         await ctx.send("A chancellor was not yet elected")
+        return
+    
+    if round_ended:
+        await ctx.send("The round is over. President must end the round with **%next_round**")
         return
 
     gameHand = random.choices(policyCards, k=3)  # Send three random policy cards to server.
@@ -256,32 +262,6 @@ async def assign(ctx, member: discord.Member, role: discord.Role):
 @bot.command()
 async def remove(ctx, member: discord.Member, role: discord.Role):
     await member.remove_roles(role)
-
-
-# President can elect chancellor
-@bot.command()
-@commands.has_role("President")
-async def elect(ctx, member: discord.Member):
-    # variables for roles
-    chancellor = discord.utils.get(ctx.guild.roles, name="Chancellor")
-    president = discord.utils.get(ctx.guild.roles, name="President")
-    voter = discord.utils.get(ctx.guild.roles, name="Voter")
-
-    # Do one quick loop to check that a chancellor has not been elected yet
-    for user in ctx.guild.members:
-        if not user.bot:
-            if chancellor in user.roles:
-                await ctx.send("A Chancellor has already been elected")
-                return
-
-    await member.add_roles(chancellor)
-
-    # give the voter role to all the other players that are not the President or Chancellor
-    for user in ctx.guild.members:
-        if not user.bot:
-            if president not in user.roles:
-                if chancellor not in user.roles:
-                    await user.add_roles(voter)
 
 
 @bot.command()
@@ -352,11 +332,15 @@ async def next_round(ctx):
     await ctx.send("President must now elect the chancellor using **%elect [@user]**")
 
 @bot.command()
-async def start_vote(ctx, member: discord.Member):
+async def elect(ctx, member: discord.Member):
     global chancellor_elected, round_ended, players
 
     chancellor = discord.utils.find(lambda x: x.name == 'Chancellor', ctx.message.guild.roles)
     president = discord.utils.find(lambda x: x.name == 'President', ctx.message.guild.roles)
+
+    if round_ended:
+        await ctx.send("The round is over. President must end the round with **%next_round**")
+        return
 
     # Do one quick loop to check that a chancellor has not been elected yet
     for user in ctx.guild.members:
