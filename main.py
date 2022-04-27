@@ -159,6 +159,7 @@ async def choseCard(ctx, role: discord.Role):
         print("Done!")
 
         # round can end now
+        await ctx.send("The round is over. President must end the round with **%next_round**")
         round_ended = True
 
         newPolicy = gameHand[0] # Define the new policy to be enacted and display to all players.
@@ -379,12 +380,15 @@ async def elect(ctx, member: discord.Member):
         b = 0
     if a > b:
         await ctx.send("A wins with {} votes, B had {} votes.".format(a, b))
+        await ctx.send("President must now call **%sendHand President** to draw cards")
         chancellor_elected = True
     elif b > a:
         await ctx.send("B wins with {} votes, A had {} votes.".format(b, a))
+        await ctx.send("The round is over. President must end the round with **%next_round**")
         round_ended = True
     elif a == b:
         await ctx.send("There is a tie with both A and B receiving {} votes.".format(a))
+        await ctx.send("The round is over. President must end the round with **%next_round**")
         round_ended = True
 
 def generatePolicyString(array_policies):   # Compute the number of each policy and generate output string.
