@@ -26,7 +26,7 @@ chancellor_elected = False
 round_ended = False
 round_counter = 0
 players = []
-policyCards = ['Fascist', 'Liberal']  # Array to hold the randomly chosen policy cards each round.
+policyCards = ['Separatist', 'Loyalist']  # Array to hold the randomly chosen policy cards each round.
 enactedPolicies = [] # Array to track currently enacted policy cards.
 
 
@@ -171,11 +171,12 @@ async def choseCard(ctx, role: discord.Role):
         await ctx.send(generatePolicyString(enactedPolicies))
 
         if(verifyWin == 1):
-            await ctx.send("The Liberals have succesfully enacted 5 policies! They are the winners!")
-            end_game(ctx)
+            await ctx.send("The Loyalists have succesfully enacted 5 policies! They are the winners!")
+            await ctx.send("Loyalist Members: " + generateWinnerList(ctx, "Loyalist"))
+
         elif(verifyWin == 2):
-            await ctx.send("The Fascists have succesfully enacted 5 policies! They are the winners!")
-            end_game(ctx)
+            await ctx.send("The Separatists have succesfully enacted 5 policies! They are the winners!")
+            await ctx.send("Separatist Members: " + generateWinnerList(ctx, "Separatist"))
     else:
         await ctx.send('The choseHand command cannot be run until after the sendHand command.')
 
@@ -387,23 +388,33 @@ async def elect(ctx, member: discord.Member):
         round_ended = True
 
 def generatePolicyString(array_policies):   # Compute the number of each policy and generate output string.
-    liberalCount = str(array_policies.count('Liberal'))
-    fascistCount = str(array_policies.count('Fascist'))
+    loyalistCount = str(array_policies.count('Loyalist'))
+    separatistCount = str(array_policies.count('Separatist'))
 
-    policyString = 'Currently enacted Liberal policies: ' + liberalCount + '   |   Currently enacted Fascist policies: ' + fascistCount
+    policyString = 'Currently enacted Loyalist policies: ' + loyalistCount + '   |   Currently enacted Separatist policies: ' + separatistCount
 
     return policyString
 
 def checkPolicies(array_policies):
-    liberalCount = array_policies.count('Liberal')
-    fascistCount = array_policies.count('Fascist')
+    loyalistCount = array_policies.count('Loyalist')
+    separatistCount = array_policies.count('Separatist')
 
-    if(liberalCount == 5): # When the Liberal policies hit 5, they have won the game.
+    if(loyalistCount == 5): # When the Loyalist policies hit 5, they have won the game.
         return 1
-    elif(fascistCount == 5): # When the Fascist policies hit 5, they have won the game.
+    elif(separatistCount == 5): # When the Separatist policies hit 5, they have won the game.
         return 2
     else:
         return -1
 
+def generateWinnerList(ctx, winningRole):
+    winners = ''
+
+    loyalist = discord.utils.get(ctx.guild.roles, name=winningRole)
+    members = [m for m in ctx.guild.members if loyalist in m.roles]
+    for m in members:
+        player = (str(m).split('#'))[0]
+        winners += (player + ', ')
+
+    return winners    
 
 bot.run(open("token.txt", "r").readline())  # Starts the bot
