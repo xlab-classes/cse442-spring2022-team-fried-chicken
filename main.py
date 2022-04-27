@@ -26,7 +26,7 @@ chancellor_elected = False
 round_ended = False
 round_counter = 0
 players = []
-policyCards = ['Fascist', 'Liberal']  # Array to hold the randomly chosen policy cards each round.
+policyCards = ['Palpatine', 'Loyalist']  # Array to hold the randomly chosen policy cards each round.
 enactedPolicies = [] # Array to track currently enacted policy cards.
 
 
@@ -168,10 +168,10 @@ async def choseCard(ctx, role: discord.Role):
         await ctx.send(generatePolicyString(enactedPolicies))
 
         if(verifyWin == 1):
-            await ctx.send("The Liberals have succesfully enacted 5 policies! They are the winners!")
+            await ctx.send("The Loyalists have succesfully enacted 5 policies! They are the winners!")
             end_game(ctx)
         elif(verifyWin == 2):
-            await ctx.send("The Fascists have succesfully enacted 5 policies! They are the winners!")
+            await ctx.send("The Palpatine have succesfully enacted 5 policies! They are the winners!")
             end_game(ctx)
     else:
         await ctx.send('The choseHand command cannot be run until after the sendHand command.')
@@ -187,9 +187,9 @@ async def sendHand(ctx, role: discord.Role):
     members = [m for m in ctx.guild.members if role in m.roles] # Verify the inputted role exists within the servers roles.
 
     # This command can only be called after the chancellor has been elected
-    if not chancellor_elected:
-        await ctx.send("A chancellor was not yet elected")
-        return
+    # if not chancellor_elected:
+    #     await ctx.send("A chancellor was not yet elected")
+    #     return
 
     gameHand = random.choices(policyCards, k=3)  # Send three random policy cards to server.
     members = [m for m in ctx.guild.members if
@@ -403,20 +403,20 @@ async def start_vote(ctx, member: discord.Member):
         round_ended = True
 
 def generatePolicyString(array_policies):   # Compute the number of each policy and generate output string.
-    liberalCount = str(array_policies.count('Liberal'))
-    fascistCount = str(array_policies.count('Fascist'))
+    loyalistCount = str(array_policies.count('Loyalist'))
+    palpatineCount = str(array_policies.count('Palpatine'))
 
-    policyString = 'Currently enacted Liberal policies: ' + liberalCount + '   |   Currently enacted Fascist policies: ' + fascistCount
+    policyString = 'Currently enacted Loyalist policies: ' + loyalistCount + '   |   Currently enacted Palpatine policies: ' + palpatineCount
 
     return policyString
 
 def checkPolicies(array_policies):
-    liberalCount = array_policies.count('Liberal')
-    fascistCount = array_policies.count('Fascist')
+    loyalistCount = array_policies.count('Loyalist')
+    palpatineCount = array_policies.count('Palpatine')
 
-    if(liberalCount == 5): # When the Liberal policies hit 5, they have won the game.
+    if(loyalistCount == 5): # When the Loyalist policies hit 5, they have won the game.
         return 1
-    elif(fascistCount == 5): # When the Fascist policies hit 5, they have won the game.
+    elif(palpatineCount == 5): # When the Palpatine policies hit 5, they have won the game.
         return 2
     else:
         return -1
