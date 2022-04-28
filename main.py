@@ -14,10 +14,10 @@ intents = discord.Intents.all()  # Intents required to be declared for certain s
 intents.guilds = True
 intents.members = True
 bot = commands.Bot(command_prefix='%', help_command=None, intents=intents)  # Creates instance of bots
-# cred = credentials.Certificate(firebase_config)
-"""databaseApp = firebase_admin.initialize_app(cred, {
+cred = credentials.Certificate(firebase_config)
+databaseApp = firebase_admin.initialize_app(cred, {
     "databaseURL": DatabaseURL
-})"""
+})
 
 game_started = False
 roles_assigned = False
