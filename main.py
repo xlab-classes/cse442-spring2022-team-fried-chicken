@@ -329,6 +329,7 @@ async def next_round(ctx):
     else:
         curr_idx += 1
     next_president = players[curr_idx]
+    next_president.add_roles(president)
 
     await ctx.send("President must now elect the chancellor using **%elect [@user]**")
 
