@@ -414,12 +414,31 @@ def checkPolicies(array_policies):
 def generateWinnerList(ctx, winningRole):
     winners = ''
 
+    user = ctx.message.author.name
+    ref = db.reference(f"/")
+    score = ref.get(user)
+
     loyalist = discord.utils.get(ctx.guild.roles, name=winningRole)
     members = [m for m in ctx.guild.members if loyalist in m.roles]
     for m in members:
         player = (str(m).split('#'))[0]
         winners += (player + ', ')
 
-    return winners    
+    for player in players:
+        if loyalist in player.roles:
+            ref.update({
+                player.name: {
+                    "Games": score[0][player.name]["Games"] + 1,
+                    "Wins": score[0][player.name]["Wins"] + 1
+                }
+            })
+        else:
+            ref.update({
+                player.name: {
+                    "Games": score[0][player.name]["Games"] + 1,
+                    "Wins": score[0][player.name]["Wins"]
+                }
+            })
+    return winners   
 
 bot.run(open("token.txt", "r").readline())  # Starts the bot
