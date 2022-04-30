@@ -26,6 +26,9 @@ chancellor_elected = False
 round_ended = False
 round_counter = 0
 players = []
+palpatine = []
+separatist = []
+loyalist = []
 policyCards = ['Separatist', 'Loyalist']  # Array to hold the randomly chosen policy cards each round.
 
 enactedPolicies = [] # Array to track currently enacted policy cards.
@@ -255,11 +258,13 @@ async def sendHand(ctx, role: discord.Role):
 @commands.has_permissions(administrator=True)
 async def assign_roles(ctx):
     if game_started:
-        global players, roles_assigned
+        global players, roles_assigned, palpatine, separatist, loyalist
         copy = players.copy()
         palpatine = players.pop(random.randrange(len(players)))  # removes one person from list to make palpatine
-        separatist = players.pop(random.randrange(
-            len(players)))  # removes one person from the list to make a separatist - need to change later so 30% of players are seperatists
+        separatist = players.pop(random.randrange(len(players)))  # is fine, never gonna test for more than 6 players
+        loyalist = players  # Remaining players are loyalist
+        
+        # TODO for Andrew --------------------------------
         palpatine_dm = await palpatine.create_dm()  # creates dm channel for palpatine
         await palpatine_dm.send("You are palpatine!")  # sends palpatine the message
         separatist_dm = await separatist.create_dm()  # creates dm channel for seperatists
@@ -432,36 +437,7 @@ def checkPolicies(array_policies):
         return 2
     else:
         return -1
-
-def generateWinnerList(ctx, winningRole):
-    winners = ''
-
-    user = ctx.message.author.name
-    ref = db.reference(f"/")
-    score = ref.get(user)
-
-    loyalist = discord.utils.get(ctx.guild.roles, name=winningRole)
-    members = [m for m in ctx.guild.members if loyalist in m.roles]
-    for m in members:
-        player = (str(m).split('#'))[0]
-        winners += (player + ', ')
-
-    for player in players:
-        if loyalist in player.roles:
-            ref.update({
-                player.name: {
-                    "Games": score[0][player.name]["Games"] + 1,
-                    "Wins": score[0][player.name]["Wins"] + 1
-                }
-            })
-        else:
-            ref.update({
-                player.name: {
-                    "Games": score[0][player.name]["Games"] + 1,
-                    "Wins": score[0][player.name]["Wins"]
-                }
-            })
-    return winners   
+   
 
 def generatePolicyString(array_policies):  # Compute the number of each policy and generate output string.
     loyalistCount = str(array_policies.count('Loyalist'))
@@ -490,15 +466,17 @@ def generateWinnerList(ctx, winningRole):
     user = ctx.message.author.name
     ref = db.reference(f"/")
     score = ref.get(user)
+    global palpatine, separatist, loyalist
+    victors = [palpatine] + [separatist]
+    if winningRole == "Loyalist":
+        victors = loyalist
 
-    loyalist = discord.utils.get(ctx.guild.roles, name=winningRole)
-    members = [m for m in ctx.guild.members if loyalist in m.roles]
-    for m in members:
+    for m in victors:
         player = (str(m).split('#'))[0]
         winners += (player + ', ')
 
     for player in players:
-        if loyalist in player.roles:
+        if player in victors:
             ref.update({
                 player.name: {
                     "Games": score[0][player.name]["Games"] + 1,
