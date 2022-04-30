@@ -27,7 +27,8 @@ round_ended = False
 round_counter = 0
 players = []
 policyCards = ['Separatist', 'Loyalist']  # Array to hold the randomly chosen policy cards each round.
-enactedPolicies = []  # Array to track currently enacted policy cards.
+
+enactedPolicies = [] # Array to track currently enacted policy cards.
 
 
 @bot.command(pass_context=True)
@@ -38,7 +39,6 @@ async def write(ctx):
     ref.update({
         "Color": "blue"
     })
-
 
 @bot.event
 async def on_ready():
@@ -108,7 +108,6 @@ async def scoreboard(ctx):
     for use in score[0]:
         await ctx.send('{0} has {1} wins out of {2} games.'.format(use, score[0][use]["Wins"], score[0][use]["Games"]))
 
-
 @bot.command()
 async def update_score(ctx, s: int):
     if type(s) == int:
@@ -122,7 +121,6 @@ async def update_score(ctx, s: int):
     else:
         await ctx.send('Try again but with an int')
 
-
 @bot.command()
 async def get_score(ctx):
     user = ctx.message.author.name
@@ -133,14 +131,13 @@ async def get_score(ctx):
 
 @bot.command()
 async def choseCard(ctx, role: discord.Role):
-    global members, gameHand, presidentHasChosen, round_ended  # members is a list that holds each user in the discord server.
-    # gameHand holds the hand the president and chancellor have.
-    global members, gameHand, presidentHasChosen  # members is a list that holds each user in the discord server.
-    global enactedPolicies  # gameHand holds the hand the president and chancellor have.
-    # presidentHasChosen is a bool flag which ensures the choseCard command isn't run before sendHand.
-    if presidentHasChosen:
-        members = [m for m in ctx.guild.members if
-                   role in m.roles]  # Verify the inputted role exists within the servers roles.
+    global members, gameHand, presidentHasChosen, round_ended    # members is a list that holds each user in the discord server.
+                                                    # gameHand holds the hand the president and chancellor have.
+    global members, gameHand, presidentHasChosen    # members is a list that holds each user in the discord server.
+    global enactedPolicies                          # gameHand holds the hand the president and chancellor have.
+                                                    # presidentHasChosen is a bool flag which ensures the choseCard command isn't run before sendHand.
+    if(presidentHasChosen):
+        members = [m for m in ctx.guild.members if role in m.roles] # Verify the inputted role exists within the servers roles.
         for m in members:
             try:
                 await m.send(gameHand)  # Send msg to all discord users within the server that have the inputted roles.
@@ -173,21 +170,22 @@ async def choseCard(ctx, role: discord.Role):
         await ctx.send("The round is over. President must end the round with **%next_round**")
         round_ended = True
 
-        newPolicy = gameHand[0]  # Define the new policy to be enacted and display to all players.
-        presidentHasChosen = False  # Update presidentHasChosen flag.
-        enactedPolicies.append(
-            newPolicy)  # Push the newly enacted policy to the enactedPolicies array to keep track of policies.
-        verifyWin = checkPolicies(enactedPolicies)  # Ensure no policy counts have reached 5.
+
+
+        newPolicy = gameHand[0] # Define the new policy to be enacted and display to all players.
+        presidentHasChosen = False # Update presidentHasChosen flag.
+        enactedPolicies.append(newPolicy) # Push the newly enacted policy to the enactedPolicies array to keep track of policies.
+        verifyWin = checkPolicies(enactedPolicies) # Ensure no policy counts have reached 5.
 
         await m.send('You succesfully removed card #' + cardToRemove + ' from the hand!')
         await ctx.send("The Chancellor has chosen to enact a new " + newPolicy + " policy!")
         await ctx.send(generatePolicyString(enactedPolicies))
 
-        if (verifyWin == 1):
+        if(verifyWin == 1):
             await ctx.send("The Loyalists have succesfully enacted 5 policies! They are the winners!")
             await ctx.send("Loyalist Members: " + generateWinnerList(ctx, "Loyalist"))
 
-        elif (verifyWin == 2):
+        elif(verifyWin == 2):
             await ctx.send("The Separatists have succesfully enacted 5 policies! They are the winners!")
             await ctx.send("Separatist Members: " + generateWinnerList(ctx, "Separatist"))
     else:
@@ -196,16 +194,18 @@ async def choseCard(ctx, role: discord.Role):
 
 @bot.command()
 async def sendHand(ctx, role: discord.Role):
-    global members, gameHand, presidentHasChosen, round_ended  # members is a list that holds each user in the discord server.
-    # gameHand holds the hand the president and chancellor have.
-    # presidentHasChosen is a bool flag which ensures the choseCard command isn't run before sendHand.
-    gameHand = random.choices(policyCards, k=3)  # Send three random policy cards to server.
-    members = [m for m in ctx.guild.members if
-               role in m.roles]  # Verify the inputted role exists within the servers roles.
-
+    global members, gameHand, presidentHasChosen, round_ended    # members is a list that holds each user in the discord server.
+                                                    # gameHand holds the hand the president and chancellor have.
+                                                    # presidentHasChosen is a bool flag which ensures the choseCard command isn't run before sendHand.
+    gameHand = random.choices(policyCards, k = 3) # Send three random policy cards to server.
+    members = [m for m in ctx.guild.members if role in m.roles] # Verify the inputted role exists within the servers roles.
     # This command can only be called after the chancellor has been elected
     if not chancellor_elected:
         await ctx.send("A chancellor was not yet elected")
+        return
+    
+    if round_ended:
+        await ctx.send("The round is over. President must end the round with **%next_round**")
         return
 
     if round_ended:
@@ -350,6 +350,7 @@ async def next_round(ctx):
     else:
         curr_idx += 1
     next_president = players[curr_idx]
+    await next_president.add_roles(president)
 
     await ctx.send("President must now elect the chancellor using **%elect [@user]**")
 
@@ -413,6 +414,54 @@ async def elect(ctx, member: discord.Member):
         await ctx.send("The round is over. President must end the round with **%next_round**")
         round_ended = True
 
+def generatePolicyString(array_policies):   # Compute the number of each policy and generate output string.
+    loyalistCount = str(array_policies.count('Loyalist'))
+    separatistCount = str(array_policies.count('Separatist'))
+
+    policyString = 'Currently enacted Loyalist policies: ' + loyalistCount + '   |   Currently enacted Separatist policies: ' + separatistCount
+
+    return policyString
+
+def checkPolicies(array_policies):
+    loyalistCount = array_policies.count('Loyalist')
+    separatistCount = array_policies.count('Separatist')
+
+    if(loyalistCount == 5): # When the Loyalist policies hit 5, they have won the game.
+        return 1
+    elif(separatistCount == 5): # When the Separatist policies hit 5, they have won the game.
+        return 2
+    else:
+        return -1
+
+def generateWinnerList(ctx, winningRole):
+    winners = ''
+
+    user = ctx.message.author.name
+    ref = db.reference(f"/")
+    score = ref.get(user)
+
+    loyalist = discord.utils.get(ctx.guild.roles, name=winningRole)
+    members = [m for m in ctx.guild.members if loyalist in m.roles]
+    for m in members:
+        player = (str(m).split('#'))[0]
+        winners += (player + ', ')
+
+    for player in players:
+        if loyalist in player.roles:
+            ref.update({
+                player.name: {
+                    "Games": score[0][player.name]["Games"] + 1,
+                    "Wins": score[0][player.name]["Wins"] + 1
+                }
+            })
+        else:
+            ref.update({
+                player.name: {
+                    "Games": score[0][player.name]["Games"] + 1,
+                    "Wins": score[0][player.name]["Wins"]
+                }
+            })
+    return winners   
 
 def generatePolicyString(array_policies):  # Compute the number of each policy and generate output string.
     loyalistCount = str(array_policies.count('Loyalist'))
