@@ -258,22 +258,49 @@ async def sendHand(ctx, role: discord.Role):
 @commands.has_permissions(administrator=True)
 async def assign_roles(ctx):
     if game_started:
-        global players, roles_assigned, palpatine, separatist, loyalist
+        global players, roles_assigned, palpatine, separatist, loyalist, round_counter
         copy = players.copy()
+
+        num_separtist = 1
+        if len(players) > 8:
+            num_separtist = 3
+        elif len(players) > 6:
+            num_separtist = 2
+
         palpatine = players.pop(random.randrange(len(players)))  # removes one person from list to make palpatine
-        separatist = players.pop(random.randrange(len(players)))  # is fine, never gonna test for more than 6 players
+        
+        for i in range(separatist):
+            separatist.append(players.pop(random.randrange(len(players))))  # is fine, never gonna test for more than 6 players
         loyalist = players  # Remaining players are loyalist
         
         # TODO for Andrew --------------------------------
         palpatine_dm = await palpatine.create_dm()  # creates dm channel for palpatine
         await palpatine_dm.send("You are palpatine!")  # sends palpatine the message
-        separatist_dm = await separatist.create_dm()  # creates dm channel for seperatists
-        await separatist_dm.send("You are a seperatist!")  # sends separatist the message
+
+        
+        for sep in separatist:
+            separatist_dm = await sep.create_dm()  # creates dm channel for seperatists
+            await separatist_dm.send("You are a seperatist!")  # sends separatist the message
+            for other in separatist:
+                if other != sep:
+                    await separatist_dm.send("{} is a Separatist".format(other.name))
+            await separatist_dm.send("{} is Palpatine".format(palpatine.name))
+        
         for loyalist in players:  # remainder of players are loyalists
             loyalist_dm = await loyalist.create_dm()  # creates loyalist dms
             await loyalist_dm.send("You are a loyalist!")  # sends loyalists msgs
         roles_assigned = True
         players = copy
+
+        # start the first round
+        round_counter = 1
+        president = discord.utils.get(ctx.guild.roles, name="President")
+        first_pres = random.choice(players)
+        await first_pres.add_roles(president)
+        await ctx.send("The game has started!")
+        await ctx.send("{} is now the president".format(first_pres.name))
+        await ctx.send("President must now elect the chancellor by calling **%elect [@user]**")
+        
     else:
         await ctx.send("Start the game first with **%start_game**")
 
@@ -356,8 +383,8 @@ async def next_round(ctx):
         curr_idx += 1
     next_president = players[curr_idx]
     await next_president.add_roles(president)
-
-    await ctx.send("President must now elect the chancellor using **%elect [@user]**")
+    await ctx.send("{} is the next president".format(next_president.name))
+    await ctx.send("President must now elect the chancellor by calling **%elect [@user]**")
 
 
 @bot.command()
@@ -379,6 +406,7 @@ async def elect(ctx, member: discord.Member):
                 return
 
     await member.add_roles(chancellor)
+    await ctx.send("{} has been nominated as chancellor".format(member.name))
 
     msg = await ctx.send(
         "Vote A or B! You have 10 seconds! \n If you put more than 1 reaction, your left-most reaction will be taken.")
