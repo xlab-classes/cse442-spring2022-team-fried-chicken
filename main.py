@@ -187,10 +187,11 @@ async def choseCard(ctx, role: discord.Role):
         if(verifyWin == 1):
             await ctx.send("The Loyalists have succesfully enacted 5 policies! They are the winners!")
             await ctx.send("Loyalist Members: " + generateWinnerList(ctx, "Loyalist"))
-
+            end_game(ctx)
         elif(verifyWin == 2):
             await ctx.send("The Separatists have succesfully enacted 5 policies! They are the winners!")
             await ctx.send("Separatist Members: " + generateWinnerList(ctx, "Separatist"))
+            end_game(ctx)
     else:
         await ctx.send('The choseHand command cannot be run until after the sendHand command.')
 
@@ -257,7 +258,7 @@ async def sendHand(ctx, role: discord.Role):
 @bot.command()
 @commands.has_permissions(administrator=True)
 async def assign_roles(ctx):
-    # if game_started:
+    if game_started:
         global players, roles_assigned, palpatine, separatist, loyalist
         copy = players.copy()
         palpatine = players.pop(random.randrange(len(players)))  # removes one person from list to make palpatine
@@ -274,8 +275,8 @@ async def assign_roles(ctx):
             await loyalist_dm.send("You are a loyalist!")  # sends loyalists msgs
         roles_assigned = True
         players = copy
-    # else:
-    #     await ctx.send("Start the game first with **%start_game**")
+    else:
+        await ctx.send("Start the game first with **%start_game**")
 
 
 # @commands.has_role("President"): used when creating commands for only a specific role to use
@@ -362,24 +363,24 @@ async def next_round(ctx):
 
 @bot.command()
 async def elect(ctx, member: discord.Member):
-    global chancellor_elected, round_ended, players
+    global chancellor_elected, round_ended, players, enactedPolicies
 
     chancellor = discord.utils.find(lambda x: x.name == 'Chancellor', ctx.message.guild.roles)
     president = discord.utils.find(lambda x: x.name == 'President', ctx.message.guild.roles)
 
-    # if round_ended:
-    #     await ctx.send("The round is over. President must end the round with **%next_round**")
-    #     return
+    if round_ended:
+        await ctx.send("The round is over. President must end the round with **%next_round**")
+        return
 
-    # # Do one quick loop to check that a chancellor has not been elected yet
-    # for user in ctx.guild.members:
-    #     if not user.bot:
-    #         if chancellor in user.roles:
-    #             await ctx.send("A Chancellor has already been elected")
-    #             return
+    # Do one quick loop to check that a chancellor has not been elected yet
+    for user in ctx.guild.members:
+        if not user.bot:
+            if chancellor in user.roles:
+                await ctx.send("A Chancellor has already been elected")
+                return
 
     await member.add_roles(chancellor)
-    checkPalpatine(member)
+    
 
     msg = await ctx.send(
         "Vote A or B! You have 10 seconds! \n If you put more than 1 reaction, your left-most reaction will be taken.")
@@ -408,6 +409,12 @@ async def elect(ctx, member: discord.Member):
     if b < 0:
         b = 0
     if a > b:
+        if(checkPolicies(enactedPolicies, member) == 0):
+            await ctx.send("The Separatists have succesfully enacted 3 policies and the Palpatine was elected Chancellor! They are the winners!")
+            await ctx.send("Separatist Members: " + generateWinnerList(ctx, "Separatist"))
+            end_game(ctx)
+            return
+        
         await ctx.send("A wins with {} votes, B had {} votes.".format(a, b))
         await ctx.send("President must now call **%sendHand President** to draw cards")
         chancellor_elected = True
@@ -439,11 +446,13 @@ def generatePolicyString(array_policies):   # Compute the number of each policy 
 
     return policyString
 
-def checkPolicies(array_policies):
+def checkPolicies(array_policies, member):
     loyalistCount = array_policies.count('Loyalist')
     separatistCount = array_policies.count('Separatist')
 
-    if(loyalistCount == 5): # When the Loyalist policies hit 5, they have won the game.
+    if(separatistCount > 2 and checkPalpatine(member) == True):  # When the Separatist policy count is 3 or greater and the Palpatine is the chancellor, they have won the game.
+        return 0
+    elif(loyalistCount == 5): # When the Loyalist policies hit 5, they have won the game.
         return 1
     elif(separatistCount == 5): # When the Separatist policies hit 5, they have won the game.
         return 2
@@ -458,19 +467,6 @@ def generatePolicyString(array_policies):  # Compute the number of each policy a
     policyString = 'Currently enacted Loyalist policies: ' + loyalistCount + '   |   Currently enacted Separatist policies: ' + separatistCount
 
     return policyString
-
-
-def checkPolicies(array_policies):
-    loyalistCount = array_policies.count('Loyalist')
-    separatistCount = array_policies.count('Separatist')
-
-    if (loyalistCount == 5):  # When the Loyalist policies hit 5, they have won the game.
-        return 1
-    elif (separatistCount == 5):  # When the Separatist policies hit 5, they have won the game.
-        return 2
-    else:
-        return -1
-
 
 def generateWinnerList(ctx, winningRole):
     winners = ''
