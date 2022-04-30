@@ -257,7 +257,7 @@ async def sendHand(ctx, role: discord.Role):
 @bot.command()
 @commands.has_permissions(administrator=True)
 async def assign_roles(ctx):
-    if game_started:
+    # if game_started:
         global players, roles_assigned, palpatine, separatist, loyalist
         copy = players.copy()
         palpatine = players.pop(random.randrange(len(players)))  # removes one person from list to make palpatine
@@ -274,8 +274,8 @@ async def assign_roles(ctx):
             await loyalist_dm.send("You are a loyalist!")  # sends loyalists msgs
         roles_assigned = True
         players = copy
-    else:
-        await ctx.send("Start the game first with **%start_game**")
+    # else:
+    #     await ctx.send("Start the game first with **%start_game**")
 
 
 # @commands.has_role("President"): used when creating commands for only a specific role to use
@@ -367,18 +367,19 @@ async def elect(ctx, member: discord.Member):
     chancellor = discord.utils.find(lambda x: x.name == 'Chancellor', ctx.message.guild.roles)
     president = discord.utils.find(lambda x: x.name == 'President', ctx.message.guild.roles)
 
-    if round_ended:
-        await ctx.send("The round is over. President must end the round with **%next_round**")
-        return
+    # if round_ended:
+    #     await ctx.send("The round is over. President must end the round with **%next_round**")
+    #     return
 
-    # Do one quick loop to check that a chancellor has not been elected yet
-    for user in ctx.guild.members:
-        if not user.bot:
-            if chancellor in user.roles:
-                await ctx.send("A Chancellor has already been elected")
-                return
+    # # Do one quick loop to check that a chancellor has not been elected yet
+    # for user in ctx.guild.members:
+    #     if not user.bot:
+    #         if chancellor in user.roles:
+    #             await ctx.send("A Chancellor has already been elected")
+    #             return
 
     await member.add_roles(chancellor)
+    checkPalpatine(member)
 
     msg = await ctx.send(
         "Vote A or B! You have 10 seconds! \n If you put more than 1 reaction, your left-most reaction will be taken.")
@@ -418,6 +419,17 @@ async def elect(ctx, member: discord.Member):
         await ctx.send("There is a tie with both A and B receiving {} votes.".format(a))
         await ctx.send("The round is over. President must end the round with **%next_round**")
         round_ended = True
+
+def checkPalpatine(member):     # Function to detect if a given player is the Palpatine or not.
+                                # Will return true if the player passed into the function is the Palpatine and false if not.
+
+    global palpatine # Holds whoever the Palpatine was each game. Assigned in the assign_roles() function.
+
+    if(palpatine == member): # Determine if the Discord user passed into checkPalpatine() is the game's Palpatine.
+        return True
+    else:
+        return False
+
 
 def generatePolicyString(array_policies):   # Compute the number of each policy and generate output string.
     loyalistCount = str(array_policies.count('Loyalist'))
