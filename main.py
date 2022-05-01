@@ -276,7 +276,7 @@ async def assign_roles(ctx):
 
         palpatine = players.pop(random.randrange(len(players)))  # removes one person from list to make palpatine
         
-        for i in range(separatist):
+        for i in range(num_separtist):
             separatist.append(players.pop(random.randrange(len(players))))  # is fine, never gonna test for more than 6 players
         loyalist = players  # Remaining players are loyalist
         
@@ -358,7 +358,7 @@ async def next_round(ctx):
         await ctx.send("Start the game first with **%start_game**")
         return
     if not roles_assigned:
-        ctx.send("roles have not been assigned yet")
+        await ctx.send("roles have not been assigned yet")
         return
     if not round_ended:
         await ctx.send("Round has not ended yet")
@@ -405,7 +405,7 @@ async def elect(ctx, member: discord.Member):
     president = discord.utils.find(lambda x: x.name == 'President', ctx.message.guild.roles)
 
     if not roles_assigned:
-        ctx.send("roles have not been assigned yet")
+        await ctx.send("roles have not been assigned yet")
         return
     if round_ended:
         await ctx.send("The round is over. President must end the round with **%next_round**")
