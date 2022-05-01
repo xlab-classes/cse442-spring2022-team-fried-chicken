@@ -136,7 +136,7 @@ async def get_score(ctx):
 
 
 @bot.command()
-async def choseCard(ctx, role: discord.Role):
+async def chooseCard(ctx, role: discord.Role):
     global members, gameHand, presidentHasChosen, round_ended    # members is a list that holds each user in the discord server.
                                                     # gameHand holds the hand the president and chancellor have.
     global members, gameHand, presidentHasChosen    # members is a list that holds each user in the discord server.
@@ -152,7 +152,7 @@ async def choseCard(ctx, role: discord.Role):
                         await m.send(file=discord.File('graphics/separatist_article.png'))
                     else:
                         await m.send(file=discord.File('graphics/loyalist_article.png'))
-                await m.send("You're the Chancellor, chose which policy you would like to enact. 0 or 1.")
+                await m.send("You're the Chancellor, chose which policy you would like to remove, the remaining policy will be enacted! (0 or 1)")
                 message_response = await bot.wait_for('message', check=lambda
                     m: m.author == ctx.author)  # Get card to remove from user.
                 cardToRemove = message_response.content
