@@ -181,7 +181,7 @@ async def choseCard(ctx, role: discord.Role):
         newPolicy = gameHand[0] # Define the new policy to be enacted and display to all players.
         presidentHasChosen = False # Update presidentHasChosen flag.
         enactedPolicies.append(newPolicy) # Push the newly enacted policy to the enactedPolicies array to keep track of policies.
-        verifyWin = checkPolicies(enactedPolicies) # Ensure no policy counts have reached 5.
+        verifyWin = checkPolicies(enactedPolicies, '') # Ensure no policy counts have reached 5.
 
         await m.send('You succesfully removed card #' + cardToRemove + ' from the hand!')
         await ctx.send("The Chancellor has chosen to enact a new " + newPolicy + " policy!")
