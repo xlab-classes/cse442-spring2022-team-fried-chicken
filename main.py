@@ -62,8 +62,11 @@ async def JOHNCENA(ctx):
 @bot.command()
 async def start_game(ctx):
     global game_started
-    game_started = True
-    await ctx.send("Game initialized!")
+    if not game_started:
+        game_started = True
+        await ctx.send("Game initialized!")
+    else:
+        await ctx.send("Game already started!")
 
 
 @bot.command()
@@ -261,6 +264,10 @@ async def assign_roles(ctx):
         global players, roles_assigned, palpatine, separatist, loyalist, round_counter
         copy = players.copy()
 
+        if roles_assigned:
+            ctx.send("roles are already assigned")
+            return
+
         num_separtist = 1
         if len(players) > 8:
             num_separtist = 3
@@ -292,7 +299,7 @@ async def assign_roles(ctx):
         roles_assigned = True
         players = copy
 
-        # start the first round
+        # start the first round and elect the first president
         round_counter = 1
         president = discord.utils.get(ctx.guild.roles, name="President")
         first_pres = random.choice(players)
@@ -350,6 +357,9 @@ async def next_round(ctx):
     if not game_started:
         await ctx.send("Start the game first with **%start_game**")
         return
+    if not roles_assigned:
+        ctx.send("roles have not been assigned yet")
+        return
     if not round_ended:
         await ctx.send("Round has not ended yet")
         return
@@ -394,6 +404,9 @@ async def elect(ctx, member: discord.Member):
     chancellor = discord.utils.find(lambda x: x.name == 'Chancellor', ctx.message.guild.roles)
     president = discord.utils.find(lambda x: x.name == 'President', ctx.message.guild.roles)
 
+    if not roles_assigned:
+        ctx.send("roles have not been assigned yet")
+        return
     if round_ended:
         await ctx.send("The round is over. President must end the round with **%next_round**")
         return
