@@ -516,13 +516,12 @@ def generateWinnerList(ctx, winningRole):
     ref = db.reference(f"/")
     score = ref.get(user)
     global palpatine, separatist, loyalist
-    victors = [palpatine] + [separatist]
+    victors = [palpatine] + separatist
     if winningRole == "Loyalist":
         victors = loyalist
 
     for m in victors:
-        player = (str(m).split('#'))[0]
-        winners += (player + ', ')
+        winners += (m.name + ', ')
 
     for player in players:
         if player in victors:
