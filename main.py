@@ -33,6 +33,34 @@ policyCards = ['Separatist', 'Loyalist']  # Array to hold the randomly chosen po
 
 enactedPolicies = [] # Array to track currently enacted policy cards.
 
+@bot.command()
+async def get_instructions(ctx):
+    user = ctx.message.author
+    instructions = "**Game Setup:**\n"
+    instructions += "- Game must start with **%start_game**\n"
+    instructions += "- All players must join with **%join_game**\n"
+    instructions += "- Once all players have joined, the administrator must call **%assign_roles**\n"
+    instructions += "- When the roles are being assigned, all players are messaged their private role\n"
+    instructions += "--- Roles are either Loyalist, Palpatine, or Separatist"
+    await user.send(instructions)
+    instructions = "**Game Play:**\n"
+    instructions += "- A random player is given the Public role of __President__\n"
+    instructions += "- __President__ must select any player to be given the role of __Chancellor__ using the **%elect** command\n"
+    instructions += "- Once a chancellor has been elected, the players must vote A(Yes) or B(No)\n"
+    instructions += "--- If the majority vote is NO or if the vote is equal, then the round ends here and the next player is given the __President__ role\n"
+    instructions += "- If the majority vote is YES, then the __President__ must dray three policy cards by calling the **%sendHand President** command and discard a card, sending the remaining two cards over to the __Chancellor__\n"
+    instructions += "- The __Chancellor__ must discard one of the remaining two cards, allowing the remaining card to be enacted\n"
+    instructions += "- The round then ends and the next player is given the role of __President__"
+    await user.send(instructions)
+    instructions = "**Object of the Game:**\n"
+    instructions += "If you are one of the **Loyalists**:\n"
+    instructions += "- Five Loyalist cards need to be enacted\n"
+    instructions += "If you are **Palpatine** or one of the **Separatists**, one of these conditions needs to me met:\n"
+    instructions += "- Six Separatist policies need to be enacted\n"
+    instructions += "- At least three Separatist policies need to enacted and Palpatine is elected __Chancellor__"
+    await user.send(instructions)
+
+
 
 @bot.command(pass_context=True)
 async def write(ctx):
